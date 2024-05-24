@@ -1,0 +1,247 @@
+// Example time series data
+const generateData = () => {
+  const data = [];
+  const startDate = new Date('2024-01-01');
+  for (let i = 0; i < 365; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(currentDate.getDate() + i);
+    const time = currentDate.toISOString().split('T')[0];
+    
+
+    let value = Math.random() * 5 + i % 30; // 在10到30之间的随机值
+    
+    if (i == 100) {
+      value = 50;
+    }
+    data.push({ time, value });
+  }
+  return data;
+};
+
+const data = generateData();
+
+// Calculate mean and standard deviation
+function calculateStatistics(data) {
+  const values = data.map(d => d.value);
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
+  const stdDev = Math.sqrt(variance);
+  return { mean, stdDev };
+}
+
+// Calculate upper and lower bounds using 3 Sigma
+function calculateBounds(data, sigma = 3) {
+  for(var i = 100; i < data.length; i ++) {
+
+    var d = JSON.parse(JSON.stringify(data)).slice(i - 100,  i);
+  
+    console.log(d)
+    const { mean, stdDev } = calculateStatistics(d);
+
+    data[i].predict = mean;
+    data[i].lower = mean - sigma * stdDev;
+    data[i].upper = mean + sigma * stdDev;
+  }
+  return data;
+}
+  
+// Calculate bounds for the data
+const result = calculateBounds(data);
+
+
+
+
+
+
+// Extract time, values, lower and upper bounds for ECharts
+const times = result.map(d => d.time);
+const values = result.map(d => d.value);
+const predict = result.map(d => d.predict);
+const lower = result.map(d => d.lower);
+const upper = result.map(d => d.upper);
+
+
+
+option = {
+  xAxis: {
+    type: 'category',
+    data: times
+  },
+    dataZoom: [
+    {
+      show: true,
+      realtime: true,
+      start: 30,
+      end: 70,
+      xAxisIndex: [0, 1]
+    },
+    {
+      type: 'inside',
+      realtime: true,
+      start: 30,
+      end: 70,
+      xAxisIndex: [0, 1]
+    }
+  ],
+      tooltip: {
+        trigger: 'axis'
+    },
+      legend: {
+        data: ['预测值', '上界', '下界']
+    },
+  yAxis: {
+    type: 'value'
+  },
+  series: [
+    {
+      name: 'Value',
+      type: 'line',
+      data: values
+    },
+    {
+      name: 'predict',
+      type: 'line',
+      data: predict
+    },
+    {
+      name: 'Lower Bound',
+      type: 'line',
+      data: lower,
+      lineStyle: {
+        type: 'dashed',
+        color: 'red'
+      }
+    },
+    {
+      name: 'Upper Bound',
+      type: 'line',
+      data: upper,
+      lineStyle: {
+        type: 'dashed',
+        color: 'green'
+      }
+    }
+  ]
+};
+
+
+
+const generateData = () => {
+    const data = [];
+    const startDate = new Date('2024-01-01');
+    for (let i = 0; i < 366; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(currentDate.getDate() + i);
+      const time = currentDate.toISOString().split('T')[0];
+      let value = Math.random() * 5; // 在10到30之间的随机值
+      if (i == 100) {
+        value = 100
+      }
+      data.push({ time, value });
+    }
+    return data;
+  };
+  
+  const data = generateData();
+  
+  console.log(data)
+  
+  // 计算四分位数
+  function calculateQuartiles(values) {
+    values.sort((a, b) => a - b);
+    const q1 = values[Math.floor(values.length * 0.25)];
+    const q3 = values[Math.floor(values.length * 0.75)];
+    return { q1, q3 };
+  }
+  
+  // 使用箱线图算法计算上下界
+  function calculateBounds(data) {
+    for(var i = 10; i < data.length; i ++) {
+      var d = JSON.parse(JSON.stringify(data)).slice(i - 10,  i);
+      console.log( 'dddd', d)
+      const { q1, q3 } = calculateQuartiles(d.map(_item=> _item.value));
+      console.log('xxx', q1, q3)
+      const iqr = q3 - q1;
+      const lower = q1 - 1.5 * iqr;
+      const upper = q3 + 1.5 * iqr;
+      data[i].predict = (q1+q3)/2,
+      data[i].lower = lower;
+      data[i].upper = upper;
+    }
+    return data;
+    
+  }
+  
+  // 计算数据的上下界
+  const result = calculateBounds(data);
+  
+  console.log(result)
+  
+  // 提取时间、值、下界和上界
+  const times = result.map(d => d.time);
+  const values = result.map(d => d.value);
+  const predict = result.map(d => d.predict);
+  const lower = result.map(d => d.lower);
+  const upper = result.map(d => d.upper);
+  
+  option = {
+    xAxis: {
+      type: 'category',
+      data: times
+    },
+      dataZoom: [
+      {
+        show: true,
+        realtime: true,
+        start: 30,
+        end: 70,
+        xAxisIndex: [0, 1]
+      },
+      {
+        type: 'inside',
+        realtime: true,
+        start: 30,
+        end: 70,
+        xAxisIndex: [0, 1]
+      }
+    ],
+        tooltip: {
+          trigger: 'axis'
+      },
+        legend: {
+          data: ['预测值', '上界', '下界']
+      },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        name: 'Value',
+        type: 'line',
+        data: values
+      },
+      {
+        name: 'predict',
+        type: 'line',
+        data: predict
+      },
+      {
+        name: 'Lower Bound',
+        type: 'line',
+        data: lower,
+        lineStyle: {
+          type: 'dashed',
+          color: 'red'
+        }
+      },
+      {
+        name: 'Upper Bound',
+        type: 'line',
+        data: upper,
+        lineStyle: {
+          type: 'dashed',
+          color: 'green'
+        }
+      }
+    ]
+  };
